@@ -36,11 +36,20 @@ view: order_items {
     type: sum
     sql: ${sale_price} ;;
     value_format_name: usd
+    description: "Total sales amount"
   }
 
   measure: average_sale_price {
     type: average
     sql: ${sale_price} ;;
+    value_format_name: usd
+  }
+
+  measure: total_gross_profit {
+    type: number
+    label: "Total Gross Profit"
+    description: "Total Sales Revenue minus Total Inventory Cost"
+    sql: ${total_sales} - ${inventory_items.total_cost} ;;
     value_format_name: usd
   }
 
