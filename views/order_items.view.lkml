@@ -53,6 +53,7 @@ view: order_items {
     value_format_name: usd
   }
 
+
   measure: count {
     type: count
   }
