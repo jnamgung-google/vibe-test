@@ -1,6 +1,21 @@
 view: users {
   sql_table_name: `bigquery-public-data.thelook_ecommerce.users` ;;
 
+  dimension_group: created {
+    type: time
+    timeframes: [
+      raw,
+      time,
+      date,
+      week,
+      month,
+      quarter,
+      year
+    ]
+    sql: ${TABLE}.created_at ;;
+    description: "Account creation date/time (sign-up date)"
+  }
+
   dimension: id {
     primary_key: yes
     type: number
