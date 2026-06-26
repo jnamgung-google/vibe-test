@@ -1,3 +1,5 @@
+include: "/views/calendar.view.lkml"
+
 view: order_items {
   sql_table_name: `bigquery-public-data.thelook_ecommerce.order_items` ;;
 
@@ -53,12 +55,57 @@ view: order_items {
     description: "The date and time this order item was created"
   }
 
+  dimension_group: created {
+    type: custom_calendar
+    # Optional list of allowed timeframes
+    custom_timeframes: [
+      custom_week,
+      custom_quarter,
+      custom_year
+    ]
+    sql: ${TABLE}.created_at ;;
+    based_on_calendar: calendar
+  }
+
+  dimension: 445_week_no {
+    type: number
+    group_label: "Created Date"
+    description: "Use this dimension as rows and pivot by Year to get side-by-side YoY analysis"
+    sql: (
+      SELECT calendar_week_num
+      FROM `eco-shift-478607-e5.bq1.calendar`
+      WHERE reference_date = DATE(${TABLE}.created_at)
+    ) ;;
+  }
+
+
   measure: total_sales {
     type: sum
     sql: ${sale_price} ;;
     value_format_name: usd
     description: "Total sales amount"
   }
+
+  measure: total_sales_yoy_growth_rate {
+    type: period_over_period
+    label: "Sales YoY Growth %"
+    based_on: total_sales
+    based_on_time: created_custom_year
+    custom_calendar_period: custom_year
+    kind: relative_change              # Automatically calculates ((Current - Prior) / Prior)
+    value_format_name: percent_1
+  }
+
+  measure: total_sales_yoy_growth_rate_445 {
+    type: period_over_period
+    label: "Sales YoY Growth % - 445"
+    based_on: total_sales
+    based_on_time: created_custom_week
+    custom_calendar_period: custom_year
+    kind: relative_change              # Automatically calculates ((Current - Prior) / Prior)
+    value_format_name: percent_1
+  }
+
 
   measure: average_sale_price {
     type: average
