@@ -55,6 +55,57 @@ view: order_items {
     description: "The date and time this order item was created"
   }
 
+  dimension_group: shipped {
+    type: time
+    timeframes: [
+      raw,
+      time,
+      date,
+      week,
+      month,
+      quarter,
+      year
+    ]
+    sql: ${TABLE}.shipped_at ;;
+    description: "The date and time this order item was shipped"
+  }
+
+  dimension_group: delivered {
+    type: time
+    timeframes: [
+      raw,
+      time,
+      date,
+      week,
+      month,
+      quarter,
+      year
+    ]
+    sql: ${TABLE}.delivered_at ;;
+    description: "The date and time this order item was delivered"
+  }
+
+  dimension_group: returned {
+    type: time
+    timeframes: [
+      raw,
+      time,
+      date,
+      week,
+      month,
+      quarter,
+      year
+    ]
+    sql: ${TABLE}.returned_at ;;
+    description: "The date and time this order item was returned"
+  }
+
+  dimension: days_to_return {
+    type: number
+    sql: TIMESTAMP_DIFF(${returned_raw}, ${delivered_raw}, DAY) ;;
+    description: "Number of days between delivery and return"
+  }
+
   dimension_group: created {
     type: custom_calendar
     # Optional list of allowed timeframes
@@ -198,6 +249,41 @@ view: order_items {
     label: "Return Value Rate (%)"
     description: "Total returned value divided by total sales revenue"
     sql: ${total_returned_value} / NULLIF(${total_sales}, 0) ;;
+    value_format_name: percent_2
+  }
+
+  measure: total_returned_cost {
+    type: sum
+    sql: ${inventory_items.cost} ;;
+    filters: [status: "Returned"]
+    value_format_name: usd
+    description: "Total cost of returned items (inventory loss)"
+  }
+
+  measure: average_days_to_return {
+    type: average
+    sql: ${days_to_return} ;;
+    value_format_name: decimal_1
+    description: "Average number of days between delivery and return"
+  }
+
+  measure: count_returned_items_repeat_customers {
+    type: count
+    filters: [status: "Returned", users.is_repeat_customer: "yes"]
+    hidden: yes
+  }
+
+  measure: count_items_repeat_customers {
+    type: count
+    filters: [users.is_repeat_customer: "yes"]
+    hidden: yes
+  }
+
+  measure: repeat_customer_return_rate {
+    type: number
+    label: "Repeat Customer Return Rate (%)"
+    description: "Percentage of items returned by repeat customers relative to their total purchases"
+    sql: ${count_returned_items_repeat_customers} / NULLIF(${count_items_repeat_customers}, 0) ;;
     value_format_name: percent_2
   }
 
