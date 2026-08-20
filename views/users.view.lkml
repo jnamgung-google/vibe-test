@@ -62,6 +62,12 @@ view: users {
     sql: (SELECT COUNT(DISTINCT oi.order_id) FROM `bigquery-public-data.thelook_ecommerce.order_items` oi WHERE oi.user_id = ${TABLE}.id) > 1 ;;
   }
 
+  dimension: has_returns {
+    type: yesno
+    description: "Has the customer returned at least one item?"
+    sql: (SELECT COUNT(*) FROM `bigquery-public-data.thelook_ecommerce.order_items` oi WHERE oi.user_id = ${TABLE}.id AND oi.status = 'Returned') > 0 ;;
+  }
+
   measure: count_repeat_customers {
     type: count
     filters: [is_repeat_customer: "yes"]
