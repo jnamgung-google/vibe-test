@@ -1,6 +1,7 @@
 connection: "default_bigquery_connection"
 
 include: "/views/**/*.view.lkml"
+include: "/dashboards/**/*.dashboard.lookml"
 
 datagroup: vibe_test_datagroup {
   max_cache_age: "1 hour"
