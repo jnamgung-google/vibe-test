@@ -21,12 +21,6 @@ explore: iowaliquorsales {
     sql_on: ${uscensus20205yr.geo_id} = ${iowaliquorsales.zip_code} ;;
   }
 
-  join: iowaavgdailytemp2025 {
-    type: left_outer
-    relationship: many_to_one
-    sql_on: ${iowaavgdailytemp2025.date_date} = ${iowaliquorsales.sale_date_date} ;;
-  }
-
   join: store_lifetime {
     type: left_outer
     relationship: many_to_one
