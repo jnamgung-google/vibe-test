@@ -52,6 +52,13 @@ explore: Order_Analysis {
     relationship: many_to_one
   }
 
+  join: marketing_spend {
+    type: left_outer
+    sql_on: ${users.created_date} = ${marketing_spend.spend_date}
+      and ${users.traffic_source} = ${marketing_spend.traffic_source} ;;
+    relationship: many_to_one
+  }
+
   join: distribution_centers {
     type: left_outer
     sql_on: ${products.distribution_center_id} = ${distribution_centers.id} ;;
