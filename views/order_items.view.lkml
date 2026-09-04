@@ -50,7 +50,7 @@ view: order_items {
     description: "Trigger writeback action to append order review into BigQuery demo_table"
     action: {
       label: "Demo BigQuery Insert"
-      url: "https://demo-bq-insert-action-123456789.us-central1.run.app/action-0/execute"
+      url: "https://demo-bq-insert-action-ipxtzv6mmq-uc.a.run.app/action-0/execute"
       icon_url: "https://cloud.google.com/images/favicon.ico"
       form_param: {
         name: "choice"
