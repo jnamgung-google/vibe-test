@@ -55,11 +55,11 @@ else
   SECRET_VAL=$(gcloud secrets versions access latest --secret="${SECRET_NAME}" --project="${PROJECT_ID}" 2>/dev/null || echo "Check Secret Manager for value")
 fi
 
-# 4. Deploy Function using Node.js 22
+# 4. Deploy Function using Node.js 24
 echo "[4/6] Deploying Cloud Run function..."
 gcloud functions deploy "${FUNCTION_NAME}" \
   --gen2 \
-  --runtime="nodejs22" \
+  --runtime="nodejs24" \
   --region="${REGION}" \
   --source="." \
   --entry-point="httpHandler" \
