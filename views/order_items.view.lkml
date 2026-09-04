@@ -40,6 +40,54 @@ view: order_items {
     description: "The order item's processing status (e.g., Completed, Shipped, Processing, Returned, Cancelled)"
   }
 
+  # ============================================================================
+  # BigQuery Writeback Action (Best Practice: Cloud Run Functions -> BigQuery)
+  # ============================================================================
+  dimension: writeback_action {
+    label: "Demo BigQuery Writeback"
+    type: string
+    sql: 'Send to BigQuery' ;;
+    description: "Trigger writeback action to append order review into BigQuery demo_table"
+    action: {
+      label: "Demo BigQuery Insert"
+      url: "https://demo-bq-insert-action-123456789.us-central1.run.app/action-0/execute"
+      icon_url: "https://cloud.google.com/images/favicon.ico"
+      form_param: {
+        name: "choice"
+        type: select
+        label: "Choose"
+        required: yes
+        default: "Yes"
+        option: {
+          name: "Yes"
+          label: "Yes"
+        }
+        option: {
+          name: "No"
+          label: "No"
+        }
+        option: {
+          name: "Maybe"
+          label: "Maybe"
+        }
+      }
+      form_param: {
+        name: "note"
+        type: textarea
+        label: "Note"
+        required: no
+      }
+      param: {
+        name: "order_id"
+        value: "{{ order_id._value }}"
+      }
+      user_attribute_param: {
+        user_attribute: "email"
+        name: "email"
+      }
+    }
+  }
+
   dimension_group: created {
     type: time
     timeframes: [
