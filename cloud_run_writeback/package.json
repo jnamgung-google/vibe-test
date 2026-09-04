@@ -1,11 +1,9 @@
 {
   "name": "looker-bigquery-writeback-action",
   "version": "1.0.0",
-  "description": "Serverless Looker Action Hub on Cloud Run functions writing back to BigQuery demo_table",
   "main": "index.js",
   "dependencies": {
     "@google-cloud/bigquery": "^7.9.0",
-    "@google-cloud/bigquery-storage": "^2.9.2",
     "@google-cloud/functions-framework": "^3.4.0",
     "@google-cloud/secret-manager": "^5.6.0"
   }

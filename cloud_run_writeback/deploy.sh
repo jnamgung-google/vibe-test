@@ -23,6 +23,17 @@ gcloud services enable \
   bigquery.googleapis.com \
   --project="${PROJECT_ID}"
 
+# Retrieve project number and service account
+PROJECT_NUM=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")
+COMPUTE_SA="${PROJECT_NUM}-compute@developer.gserviceaccount.com"
+
+# Grant Cloud Build role to compute service account to prevent build permission prompt
+echo "[1.1/6] Granting Cloud Build builder role to ${COMPUTE_SA}..."
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${COMPUTE_SA}" \
+  --role="roles/cloudbuild.builds.builder" \
+  --quiet || true
+
 # 2. Setup BigQuery Table
 echo "[2/6] Setting up BigQuery demo_dataset.demo_table..."
 bq --project_id="${PROJECT_ID}" mk --dataset --location=US demo_dataset 2>/dev/null || true
@@ -44,11 +55,11 @@ else
   SECRET_VAL=$(gcloud secrets versions access latest --secret="${SECRET_NAME}" --project="${PROJECT_ID}" 2>/dev/null || echo "Check Secret Manager for value")
 fi
 
-# 4. Deploy Function
+# 4. Deploy Function using Node.js 22
 echo "[4/6] Deploying Cloud Run function..."
 gcloud functions deploy "${FUNCTION_NAME}" \
   --gen2 \
-  --runtime="nodejs20" \
+  --runtime="nodejs22" \
   --region="${REGION}" \
   --source="." \
   --entry-point="httpHandler" \
@@ -70,8 +81,7 @@ gcloud functions deploy "${FUNCTION_NAME}" \
 echo "[6/6] Granting IAM permissions..."
 SA_EMAIL=$(gcloud functions describe "${FUNCTION_NAME}" --gen2 --region="${REGION}" --project="${PROJECT_ID}" --format="value(serviceConfig.serviceAccountEmail)")
 if [ -z "${SA_EMAIL}" ] || [ "${SA_EMAIL}" = "null" ]; then
-  PROJECT_NUM=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")
-  SA_EMAIL="${PROJECT_NUM}-compute@developer.gserviceaccount.com"
+  SA_EMAIL="${COMPUTE_SA}"
 fi
 
 gcloud secrets add-iam-policy-binding "${SECRET_NAME}" \
