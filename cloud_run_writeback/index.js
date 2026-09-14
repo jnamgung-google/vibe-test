@@ -1,6 +1,7 @@
 /**
- * Looker Action API Server for BigQuery Writeback
+ * Looker Action API Server for BigQuery Writeback (Monthly Sales Price Target)
  * Best Practice: https://cloud.google.com/looker/docs/best-practices/bigquery-writeback-actions
+ * Blog Reference: https://discuss.google.dev/t/beyond-dashboards-act-on-your-data-with-looker-actions/256997
  */
 
 const crypto = require("crypto");
@@ -10,6 +11,7 @@ const { BigQuery } = require("@google-cloud/bigquery");
 const projectId = process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || "eco-shift-478607-e5";
 const datasetId = process.env.DATASET_ID || "demo_dataset";
 const tableId = process.env.TABLE_ID || "demo_table";
+const targetsTableId = process.env.TARGETS_TABLE_ID || "monthly_sales_targets";
 
 const secrets = new SecretManagerServiceClient();
 const bigquery = new BigQuery({ projectId });
@@ -40,7 +42,7 @@ function timingSafeEqual(a, b) {
   const bLen = Buffer.byteLength(b);
   const bufA = Buffer.allocUnsafe(aLen);
   bufA.write(a);
-  const bufB = Buffer.allocUnsafe(aLen);
+  const bufB = Buffer.allocUnsafe(bLen);
   bufB.write(b);
   return crypto.timingSafeEqual(bufA, bufB) && aLen === bLen;
 }
@@ -103,13 +105,15 @@ function routeNotFound(req) {
 }
 
 async function hubListing(req) {
-  const baseUrl = process.env.CALLBACK_URL_PREFIX || `https://${req.headers.host}`;
+  const defaultBaseUrl = `https://us-central1-${projectId}.cloudfunctions.net/demo-bq-insert-action`;
+  const baseUrl = (process.env.CALLBACK_URL_PREFIX || defaultBaseUrl).replace(/\/$/, "");
   return {
+    label: "Looker BigQuery Writeback Action Hub",
     integrations: [
       {
         name: "demo-bq-insert",
-        label: "Demo BigQuery Insert",
-        description: "Appends selected query/cell rows to BigQuery demo_table",
+        label: "Update Monthly Sales Target ($)",
+        description: "Update the monthly sales_price target for the selected month in BigQuery with live Looker refresh",
         supported_action_types: ["cell", "query", "dashboard"],
         form_url: `${baseUrl}/action-0/form`,
         url: `${baseUrl}/action-0/execute`,
@@ -129,10 +133,10 @@ async function hubStatus(req) {
     status: 200,
     body: {
       status: "healthy",
-      service: "looker-bigquery-writeback",
+      service: "looker-bigquery-monthly-sales-target-writeback",
       projectId,
       datasetId,
-      tableId,
+      targetsTableId,
       hasSecret: !!secret,
       timestamp: new Date().toISOString()
     }
@@ -140,22 +144,43 @@ async function hubStatus(req) {
 }
 
 async function action0Form(req) {
+  const clickedValue = (req.body && req.body.data && req.body.data.value)
+    ? String(req.body.data.value).trim()
+    : "";
+  const isMonth = /^\d{4}-\d{2}$/.test(clickedValue);
+  const defaultMonth = isMonth ? clickedValue : new Date().toISOString().slice(0, 7);
+
+  let defaultTarget = "150000";
+  if (!isMonth && clickedValue) {
+    const numericVal = clickedValue.replace(/[^0-9.]/g, "");
+    if (numericVal && !isNaN(parseFloat(numericVal))) {
+      defaultTarget = numericVal;
+    }
+  }
+
   return [
     {
-      name: "choice",
-      label: "Choose",
-      type: "select",
-      options: [
-        { name: "Yes", label: "Yes" },
-        { name: "No", label: "No" },
-        { name: "Maybe", label: "Maybe" }
-      ],
-      default: "Yes"
+      name: "target_month",
+      label: "Target Month (YYYY-MM)",
+      type: "string",
+      default: defaultMonth,
+      description: "수정할 타겟 연월 (예: 2026-09)",
+      required: true
+    },
+    {
+      name: "target_amount",
+      label: "New Sales Price Target ($)",
+      type: "string",
+      default: defaultTarget,
+      description: "새로운 월간 Sales Price 목표 금액 ($) 입력 (예: 200000)",
+      required: true
     },
     {
       name: "note",
-      label: "Note",
-      type: "textarea"
+      label: "Adjustment Reason / Note",
+      type: "textarea",
+      default: "월별 매출 타겟 조정",
+      description: "타겟 수정 사유 (예: 프로모션 반영 상향 조정)"
     }
   ];
 }
@@ -163,27 +188,95 @@ async function action0Form(req) {
 async function action0Execute(req) {
   const formParams = req.body.form_params || {};
   const actionParams = req.body.data || {};
-  const scheduledPlanId = req.body.scheduled_plan ? req.body.scheduled_plan.scheduled_plan_id : null;
-  const queryData = req.body.attachment && req.body.attachment.data ? req.body.attachment.data : [];
 
-  const row = {
-    invoked_at: new Date().toISOString(),
-    invoked_by: actionParams.email || req.headers["x-looker-user-email"] || "looker-user@example.com",
-    scheduled_plan_id: scheduledPlanId ? String(scheduledPlanId) : null,
-    query_result_size: Array.isArray(queryData) ? queryData.length : 1,
-    choice: formParams.choice || actionParams.choice || "Yes",
-    note: formParams.note || actionParams.note || ""
-  };
+  const rawMonth = formParams.target_month || actionParams.target_month || formParams.choice || new Date().toISOString().slice(0, 7);
+  const targetMonth = String(rawMonth).trim().slice(0, 7);
 
-  await insertRowToBigQuery(datasetId, tableId, row);
+  const rawAmount = formParams.target_amount || actionParams.target_amount || "150000";
+  const cleanedAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, ""));
+  const targetAmount = isNaN(cleanedAmount) ? 150000.0 : cleanedAmount;
+
+  const note = formParams.note || actionParams.note || "Updated via Looker Action";
+  const updatedBy = actionParams.email || req.headers["x-looker-user-email"] || "looker-user@google.com";
+  const nowIso = new Date().toISOString();
+
+  await appendMonthlyTargetToBigQuery(datasetId, targetsTableId, {
+    target_month: targetMonth,
+    target_amount: targetAmount,
+    updated_by: updatedBy,
+    updated_at: nowIso,
+    note: note
+  });
+
+  // Also append audit record to demo_table
+  await insertRowToBigQuery(datasetId, tableId, {
+    invoked_at: nowIso,
+    invoked_by: updatedBy,
+    scheduled_plan_id: targetMonth,
+    query_result_size: Math.round(targetAmount),
+    choice: `Target: $${targetAmount.toLocaleString()}`,
+    note: `[${targetMonth}] ${note}`
+  });
 
   return {
     status: 200,
     body: {
-      looker: { success: true, refresh_query: false },
-      message: `Successfully inserted row into ${datasetId}.${tableId}`
+      looker: {
+        success: true,
+        refresh_query: true
+      },
+      message: `Successfully updated ${targetMonth} Sales Price Target to $${targetAmount.toLocaleString()}`
     }
   };
+}
+
+async function appendMonthlyTargetToBigQuery(targetDataset, targetTable, row) {
+  try {
+    const dataset = bigquery.dataset(targetDataset);
+    const table = dataset.table(targetTable);
+
+    const [tableExists] = await table.exists();
+    if (!tableExists) {
+      console.log(`Table ${targetDataset}.${targetTable} missing. Auto-creating and seeding initial monthly targets...`);
+      const schema = [
+        { name: "target_month", type: "STRING" },
+        { name: "target_amount", type: "FLOAT64" },
+        { name: "updated_by", type: "STRING" },
+        { name: "updated_at", type: "TIMESTAMP" },
+        { name: "note", type: "STRING" }
+      ];
+      await dataset.createTable(targetTable, { schema });
+
+      // Seed baseline monthly targets for 2024, 2025, 2026 so Looker explore has full year targets ready
+      const seedRows = [];
+      const seedTime = new Date(Date.now() - 86400000).toISOString();
+      for (const year of [2024, 2025, 2026]) {
+        const baseAmt = year === 2024 ? 100000.0 : year === 2025 ? 120000.0 : 150000.0;
+        for (let m = 1; m <= 12; m++) {
+          const monthStr = `${year}-${String(m).padStart(2, "0")}`;
+          seedRows.push({
+            target_month: monthStr,
+            target_amount: baseAmt,
+            updated_by: "system-seed@google.com",
+            updated_at: seedTime,
+            note: "Initial baseline monthly target"
+          });
+        }
+      }
+      await table.insert(seedRows);
+      console.log(`Seeded ${seedRows.length} baseline monthly target rows.`);
+    }
+
+    await table.insert([row]);
+    console.log(`Appended new target row to ${targetDataset}.${targetTable}:`, row);
+  } catch (err) {
+    if (err.name === "PartialFailureError") {
+      console.error("Partial failure inserting into BigQuery targets table:", JSON.stringify(err.errors));
+    } else {
+      console.error("BigQuery targets insert error:", err);
+    }
+    throw err;
+  }
 }
 
 async function insertRowToBigQuery(targetDataset, targetTable, row) {
@@ -193,7 +286,6 @@ async function insertRowToBigQuery(targetDataset, targetTable, row) {
 
     const [tableExists] = await table.exists();
     if (!tableExists) {
-      console.log(`Table ${targetDataset}.${targetTable} missing. Auto-creating table...`);
       const schema = [
         { name: "invoked_at", type: "TIMESTAMP" },
         { name: "invoked_by", type: "STRING" },
@@ -206,13 +298,7 @@ async function insertRowToBigQuery(targetDataset, targetTable, row) {
     }
 
     await table.insert([row]);
-    console.log(`Appended row to ${targetDataset}.${targetTable}:`, row);
   } catch (err) {
-    if (err.name === "PartialFailureError") {
-      console.error("Partial failure inserting into BigQuery:", JSON.stringify(err.errors));
-    } else {
-      console.error("BigQuery insert error:", err);
-    }
-    throw err;
+    console.error("Audit table insert warning:", err.message);
   }
 }
