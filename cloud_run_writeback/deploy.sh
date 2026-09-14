@@ -87,13 +87,13 @@ gcloud run services update "${FUNCTION_NAME}" \
   --project="${PROJECT_ID}" \
   --quiet || echo "⚠️ Notice: Could not disable invoker IAM check directly."
 
-URL=$(gcloud functions describe "${FUNCTION_NAME}" --gen2 --region="${REGION}" --project="${PROJECT_ID}" --format="value(serviceConfig.uri)")
+CF_URL="https://${REGION}-${PROJECT_ID}.cloudfunctions.net/${FUNCTION_NAME}"
 
-echo "[5/6] Setting CALLBACK_URL_PREFIX..."
+echo "[5/6] Setting CALLBACK_URL_PREFIX to cloudfunctions.net endpoint..."
 gcloud functions deploy "${FUNCTION_NAME}" \
   --gen2 \
   --region="${REGION}" \
-  --update-env-vars="CALLBACK_URL_PREFIX=${URL}" \
+  --update-env-vars="CALLBACK_URL_PREFIX=${CF_URL}" \
   --project="${PROJECT_ID}"
 
 # 5. IAM Permissions
@@ -117,15 +117,15 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
 echo "================================================================="
 echo "✅ DEPLOYMENT TO GCP COMPLETE!"
 echo ""
-echo "1. Cloud Run Function URL:"
-echo "   ${URL}"
+echo "1. Looker Action Hub URL (cloudfunctions.net - Use this in Looker Admin!):"
+echo "   ${CF_URL}"
 echo ""
 echo "2. Your LOOKER_SECRET Token:"
 echo "   ${SECRET_VAL}"
 echo ""
 echo "NEXT STEPS (Just 3 clicks in Looker Admin):"
 echo "1. Open: https://7933da4d-406b-4c80-af6d-4721b2b6580c.looker.app/admin/actions"
-echo "2. Scroll down and click 'Add Action Hub' -> Paste the URL above."
+echo "2. Scroll down and click 'Add Action Hub' -> Paste the cloudfunctions.net URL above."
 echo "3. Click 'Configure Authorization' -> Paste your LOOKER_SECRET."
 echo "4. Toggle 'Demo BigQuery Insert' to ENABLED, and click Save!"
 echo "================================================================="

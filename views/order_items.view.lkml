@@ -7,6 +7,7 @@ view: order_items {
     primary_key: yes
     type: number
     sql: ${TABLE}.id ;;
+    tags: ["demo-bq-insert"]
   }
 
   dimension: inventory_item_id {
@@ -22,6 +23,7 @@ view: order_items {
   dimension: order_id {
     type: number
     sql: ${TABLE}.order_id ;;
+    tags: ["demo-bq-insert"]
   }
 
   dimension: user_id {
@@ -48,9 +50,10 @@ view: order_items {
     type: string
     sql: 'Send to BigQuery' ;;
     description: "Trigger writeback action to append order review into BigQuery demo_table"
+    tags: ["demo-bq-insert"]
     action: {
       label: "Demo BigQuery Insert"
-      url: "https://demo-bq-insert-action-ipxtzv6mmq-uc.a.run.app/action-0/execute"
+      url: "https://us-central1-eco-shift-478607-e5.cloudfunctions.net/demo-bq-insert-action/action-0/execute"
       icon_url: "https://cloud.google.com/images/favicon.ico"
       form_param: {
         name: "choice"

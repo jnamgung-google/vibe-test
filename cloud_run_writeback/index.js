@@ -103,8 +103,10 @@ function routeNotFound(req) {
 }
 
 async function hubListing(req) {
-  const baseUrl = process.env.CALLBACK_URL_PREFIX || `https://${req.headers.host}`;
+  const defaultBaseUrl = `https://us-central1-${projectId}.cloudfunctions.net/demo-bq-insert-action`;
+  const baseUrl = (process.env.CALLBACK_URL_PREFIX || defaultBaseUrl).replace(/\/$/, "");
   return {
+    label: "Demo BigQuery Writeback Action Hub",
     integrations: [
       {
         name: "demo-bq-insert",
