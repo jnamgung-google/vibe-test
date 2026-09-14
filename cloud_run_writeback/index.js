@@ -144,18 +144,15 @@ async function hubStatus(req) {
 }
 
 async function action0Form(req) {
-  const clickedValue = (req.body && req.body.data && req.body.data.value)
-    ? String(req.body.data.value).trim()
-    : "";
-  const isMonth = /^\d{4}-\d{2}$/.test(clickedValue);
-  const defaultMonth = isMonth ? clickedValue : new Date().toISOString().slice(0, 7);
+  const data = (req.body && req.body.data) ? req.body.data : {};
+  const clickedValue = data.value ? String(data.value).trim() : "";
+  const paramMonth = data.target_month ? String(data.target_month).trim() : "";
+  const monthMatch = paramMonth.match(/(\d{4}-\d{2})/) || clickedValue.match(/(\d{4}-\d{2})/);
+  const defaultMonth = monthMatch ? monthMatch[1] : new Date().toISOString().slice(0, 7);
 
-  let defaultTarget = "150000";
-  if (!isMonth && clickedValue) {
-    const numericVal = clickedValue.replace(/[^0-9.]/g, "");
-    if (numericVal && !isNaN(parseFloat(numericVal))) {
-      defaultTarget = numericVal;
-    }
+  let defaultTarget = data.target_amount ? String(data.target_amount).replace(/[^0-9.]/g, "") : "150000";
+  if (!defaultTarget || isNaN(parseFloat(defaultTarget))) {
+    defaultTarget = "150000";
   }
 
   return [
@@ -164,7 +161,7 @@ async function action0Form(req) {
       label: "Target Month (YYYY-MM)",
       type: "string",
       default: defaultMonth,
-      description: "수정할 타겟 연월 (예: 2026-09)",
+      description: "수정할 타겟 연월 (예: 2024-05, 2026-09)",
       required: true
     },
     {
@@ -189,8 +186,11 @@ async function action0Execute(req) {
   const formParams = req.body.form_params || {};
   const actionParams = req.body.data || {};
 
-  const rawMonth = formParams.target_month || actionParams.target_month || formParams.choice || new Date().toISOString().slice(0, 7);
-  const targetMonth = String(rawMonth).trim().slice(0, 7);
+  const rawMonthStr = String(
+    formParams.target_month || actionParams.target_month || actionParams.value || formParams.choice || ""
+  ).trim();
+  const execMonthMatch = rawMonthStr.match(/(\d{4}-\d{2})/);
+  const targetMonth = execMonthMatch ? execMonthMatch[1] : new Date().toISOString().slice(0, 7);
 
   const rawAmount = formParams.target_amount || actionParams.target_amount || "150000";
   const cleanedAmount = parseFloat(String(rawAmount).replace(/[^0-9.-]/g, ""));
@@ -267,15 +267,27 @@ async function appendMonthlyTargetToBigQuery(targetDataset, targetTable, row) {
       console.log(`Seeded ${seedRows.length} baseline monthly target rows.`);
     }
 
-    await table.insert([row]);
-    console.log(`Appended new target row to ${targetDataset}.${targetTable}:`, row);
+    // Use standard BigQuery DML INSERT so BigQuery immediately invalidates query cache for this table
+    const insertSql = `
+      INSERT INTO \`${projectId}.${targetDataset}.${targetTable}\`
+      (target_month, target_amount, updated_by, updated_at, note)
+      VALUES (@target_month, @target_amount, @updated_by, CURRENT_TIMESTAMP(), @note)
+    `;
+    await bigquery.query({
+      query: insertSql,
+      params: {
+        target_month: row.target_month,
+        target_amount: Number(row.target_amount),
+        updated_by: row.updated_by,
+        note: row.note
+      }
+    });
+    console.log(`Inserted new target row via DML to ${targetDataset}.${targetTable}:`, row);
   } catch (err) {
-    if (err.name === "PartialFailureError") {
-      console.error("Partial failure inserting into BigQuery targets table:", JSON.stringify(err.errors));
-    } else {
-      console.error("BigQuery targets insert error:", err);
-    }
-    throw err;
+    console.error("BigQuery targets DML insert error, falling back to streaming insert:", err.message);
+    const dataset = bigquery.dataset(targetDataset);
+    const table = dataset.table(targetTable);
+    await table.insert([row]);
   }
 }
 

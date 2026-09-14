@@ -4,7 +4,7 @@ include: "/views/**/*.view.lkml"
 include: "/dashboards/**/*.dashboard.lookml"
 
 datagroup: vibe_test_datagroup {
-  max_cache_age: "1 hour"
+  max_cache_age: "0 seconds"
 }
 
 persist_with: vibe_test_datagroup
@@ -14,6 +14,7 @@ explore: Order_Analysis {
   label: "Order Analysis"
   description: "Explore for order items and related dimensions."
   view_name: order_items
+  persist_for: "0 seconds"
 
   sql_always_where:
     {% if _user_attributes['country'] == '%' or _user_attributes['country'] == nil or _user_attributes['country'] == '' %}
