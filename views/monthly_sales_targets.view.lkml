@@ -61,7 +61,8 @@ view: monthly_sales_targets {
 
   measure: monthly_sales_target {
     label: "Monthly Sales Price Target ($)"
-    type: max
+    type: sum_distinct
+    sql_distinct_key: ${target_month} ;;
     sql: ${TABLE}.target_amount ;;
     value_format_name: usd_0
     description: "Active Monthly Sales Price Target from BigQuery (click '...' on Month or Target to update)"

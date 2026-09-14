@@ -26,9 +26,20 @@
   elements:
   - name: title_banner
     type: text
-    title_text: "E-Commerce Executive Hub"
-    subtitle_text: "Executive Command Center & Operational Metrics"
-    body_text: "Welcome to the E-Commerce Executive Dashboard. Monitor real-time sales, profitability margins, item returns, customer demographic breakdowns, acquisition traffic channels, and logistical stats below. Use the filters above to slice by creation date, user country, and product category."
+    title_text: ""
+    subtitle_text: ""
+    body_text: |
+      <div style="display: flex; gap: 12px; border-bottom: 2px solid #E0E0E0; padding-bottom: 12px; margin-bottom: 8px; align-items: center;">
+        <a href="/dashboards/vibe_test::ecommerce_operations" style="padding: 10px 20px; border-radius: 8px; background-color: #1A73E8; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 2px 5px rgba(26,115,232,0.3);">
+          📊 Tab 1: Business Operations Overview
+        </a>
+        <a href="/dashboards/vibe_test::ecommerce_target_performance" style="padding: 10px 20px; border-radius: 8px; background-color: #F1F3F4; color: #3C4043; text-decoration: none; font-weight: 600; font-size: 14px;">
+          🎯 Tab 2: Performance vs. Target (Interactive Writeback)
+        </a>
+      </div>
+      <div style="padding: 4px 2px; color: #5F6368; font-size: 13px;">
+        <b>E-Commerce Executive Hub:</b> Monitor real-time sales, profitability margins, item returns, customer demographics, and monthly sales target achievement. Switch to <b>Tab 2</b> above or scroll down to view & edit Monthly Sales Price Targets directly in BigQuery.
+      </div>
     row: 0
     col: 0
     width: 24
@@ -498,6 +509,186 @@
     col: 16
     width: 8
     height: 6
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  # =========================================================================
+  # SECTION: Monthly Sales Performance vs. Target (Interactive Writeback)
+  # =========================================================================
+  - name: target_tracking_section_header
+    type: text
+    title_text: "🎯 Monthly Sales Performance vs. Target (Interactive Writeback Hub)"
+    subtitle_text: "Track Actual Sales Price vs. Monthly Targets and click ⋮ on the Edit Column below to update targets live in BigQuery"
+    row: 52
+    col: 0
+    width: 24
+    height: 2
+
+  - name: ops_target_kpi_actual_sales
+    title: "Actual Total Sales Revenue"
+    model: vibe_test
+    explore: Order_Analysis
+    type: single_value
+    fields: [order_items.total_sales]
+    limit: 500
+    show_single_value_title: true
+    custom_color: "#1A73E8"
+    row: 54
+    col: 0
+    width: 6
+    height: 4
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  - name: ops_target_kpi_total_target
+    title: "Total Sales Price Target"
+    model: vibe_test
+    explore: Order_Analysis
+    type: single_value
+    fields: [monthly_sales_targets.monthly_sales_target]
+    limit: 500
+    show_single_value_title: true
+    custom_color: "#5F6368"
+    row: 54
+    col: 6
+    width: 6
+    height: 4
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  - name: ops_target_kpi_variance
+    title: "Sales vs. Target Variance ($)"
+    model: vibe_test
+    explore: Order_Analysis
+    type: single_value
+    fields: [monthly_sales_targets.sales_vs_target_variance]
+    limit: 500
+    show_single_value_title: true
+    custom_color: "#12B886"
+    row: 54
+    col: 12
+    width: 6
+    height: 4
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  - name: ops_target_kpi_achievement_rate
+    title: "Target Achievement Rate (%)"
+    model: vibe_test
+    explore: Order_Analysis
+    type: single_value
+    fields: [monthly_sales_targets.target_achievement_rate]
+    limit: 500
+    show_single_value_title: true
+    custom_color: "#F59F00"
+    row: 54
+    col: 18
+    width: 6
+    height: 4
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  - name: ops_monthly_actual_vs_target_chart
+    title: "Monthly Actual Sales vs. Sales Price Target ($)"
+    model: vibe_test
+    explore: Order_Analysis
+    type: looker_column
+    fields: [
+      order_items.created_month,
+      order_items.total_sales,
+      monthly_sales_targets.monthly_sales_target
+    ]
+    sorts: [order_items.created_month asc]
+    limit: 500
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    show_x_axis_label: true
+    show_x_axis_ticks: true
+    legend_position: center
+    colors: ["#1A73E8", "#F59F00"]
+    series_types:
+      monthly_sales_targets.monthly_sales_target: line
+    row: 58
+    col: 0
+    width: 12
+    height: 8
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  - name: ops_monthly_achievement_variance_chart
+    title: "Monthly Target Achievement (%) & Variance Trend"
+    model: vibe_test
+    explore: Order_Analysis
+    type: looker_line
+    fields: [
+      order_items.created_month,
+      monthly_sales_targets.target_achievement_rate,
+      monthly_sales_targets.sales_vs_target_variance
+    ]
+    sorts: [order_items.created_month asc]
+    limit: 500
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    show_x_axis_label: true
+    show_x_axis_ticks: true
+    legend_position: center
+    colors: ["#12B886", "#FA5252"]
+    row: 58
+    col: 12
+    width: 12
+    height: 8
+    listen:
+      created_date: order_items.created_date
+      country: users.country
+      category: products.category
+
+  - name: ops_interactive_monthly_target_writeback_table
+    title: "🎯 Monthly Sales Target Management Table (Click ⋮ on Edit Column to Update Target)"
+    model: vibe_test
+    explore: Order_Analysis
+    type: looker_grid
+    fields: [
+      order_items.created_month,
+      order_items.writeback_action,
+      order_items.total_sales,
+      monthly_sales_targets.monthly_sales_target,
+      monthly_sales_targets.sales_vs_target_variance,
+      monthly_sales_targets.target_achievement_rate,
+      monthly_sales_targets.updated_by,
+      monthly_sales_targets.updated_date,
+      monthly_sales_targets.note
+    ]
+    sorts: [order_items.created_month desc]
+    limit: 500
+    show_view_names: false
+    show_row_numbers: true
+    transpose: false
+    truncate_text: false
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    enable_conditional_formatting: true
+    row: 66
+    col: 0
+    width: 24
+    height: 10
     listen:
       created_date: order_items.created_date
       country: users.country
