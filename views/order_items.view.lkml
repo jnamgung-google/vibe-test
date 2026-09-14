@@ -43,46 +43,42 @@ view: order_items {
   }
 
   # ============================================================================
-  # BigQuery Writeback Action (Best Practice: Cloud Run Functions -> BigQuery)
+  # BigQuery Writeback Action (Best Practice: Monthly Sales Price Target)
   # ============================================================================
   dimension: writeback_action {
-    label: "Demo BigQuery Writeback"
+    label: "🎯 Edit Monthly Sales Target"
     type: string
-    sql: 'Send to BigQuery' ;;
-    description: "Trigger writeback action to append order review into BigQuery demo_table"
+    sql: CONCAT('Edit Target (', ${created_month}, ')') ;;
+    description: "Click to update the Monthly Sales Price Target ($) for this month in BigQuery"
     tags: ["demo-bq-insert"]
     action: {
-      label: "Demo BigQuery Insert"
+      label: "Update Monthly Sales Target ($)"
       url: "https://us-central1-eco-shift-478607-e5.cloudfunctions.net/demo-bq-insert-action/action-0/execute"
       icon_url: "https://cloud.google.com/images/favicon.ico"
       form_param: {
-        name: "choice"
-        type: select
-        label: "Choose"
+        name: "target_month"
+        type: string
+        label: "Target Month (YYYY-MM)"
         required: yes
-        default: "Yes"
-        option: {
-          name: "Yes"
-          label: "Yes"
-        }
-        option: {
-          name: "No"
-          label: "No"
-        }
-        option: {
-          name: "Maybe"
-          label: "Maybe"
-        }
+        default: "{{ created_month._value }}"
+      }
+      form_param: {
+        name: "target_amount"
+        type: string
+        label: "New Sales Price Target ($)"
+        required: yes
+        default: "180000"
       }
       form_param: {
         name: "note"
         type: textarea
-        label: "Note"
+        label: "Adjustment Reason / Note"
         required: no
+        default: "월별 매출 타겟 조정"
       }
       param: {
-        name: "order_id"
-        value: "{{ order_id._value }}"
+        name: "target_month"
+        value: "{{ created_month._value }}"
       }
       user_attribute_param: {
         user_attribute: "email"
@@ -104,6 +100,7 @@ view: order_items {
     ]
     sql: ${TABLE}.created_at ;;
     description: "The date and time this order item was created"
+    tags: ["demo-bq-insert"]
   }
 
   dimension_group: shipped {

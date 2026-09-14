@@ -70,4 +70,11 @@ explore: Order_Analysis {
     sql_on: ${order_items.order_id} = ${anomalous_orders.order_id} ;;
     relationship: many_to_one
   }
+
+  join: monthly_sales_targets {
+    view_label: "Monthly Sales Targets (Writeback)"
+    type: left_outer
+    sql_on: ${order_items.created_month} = ${monthly_sales_targets.target_month} ;;
+    relationship: many_to_one
+  }
 }
