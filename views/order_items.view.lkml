@@ -48,11 +48,10 @@ view: order_items {
   dimension: writeback_action {
     label: "🎯 Edit Monthly Sales Target"
     type: string
-    sql: CONCAT('Edit Target (', ${created_month}, ')') ;;
+    sql: CONCAT('🎯 Edit Target (', ${created_month}, ')') ;;
     description: "Click to update the Monthly Sales Price Target ($) for this month in BigQuery"
-    tags: ["demo-bq-insert"]
     action: {
-      label: "Update Monthly Sales Target ($)"
+      label: "🎯 Update Monthly Sales Target ($)"
       url: "https://us-central1-eco-shift-478607-e5.cloudfunctions.net/demo-bq-insert-action/action-0/execute"
       icon_url: "https://cloud.google.com/images/favicon.ico"
       form_param: {
@@ -67,7 +66,7 @@ view: order_items {
         type: string
         label: "New Sales Price Target ($)"
         required: yes
-        default: "180000"
+        default: "{{ monthly_sales_targets.monthly_sales_target._value }}"
       }
       form_param: {
         name: "note"

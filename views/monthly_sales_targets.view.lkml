@@ -16,7 +16,12 @@ view: monthly_sales_targets {
         FROM UNNEST(GENERATE_DATE_ARRAY('2020-01-01', '2027-12-01', INTERVAL 1 MONTH)) AS month_date
       ),
       combined AS (
-        SELECT target_month, target_amount, updated_by, updated_at, note
+        SELECT
+          TRIM(CAST(target_month AS STRING)) AS target_month,
+          CAST(target_amount AS FLOAT64) AS target_amount,
+          CAST(updated_by AS STRING) AS updated_by,
+          CAST(updated_at AS TIMESTAMP) AS updated_at,
+          CAST(note AS STRING) AS note
         FROM `eco-shift-478607-e5.demo_dataset.monthly_sales_targets`
         UNION ALL
         SELECT target_month, target_amount, updated_by, updated_at, note
