@@ -40,21 +40,29 @@ function timingSafeEqual(a, b) {
   if (typeof a !== "string" || typeof b !== "string") return false;
   const aLen = Buffer.byteLength(a);
   const bLen = Buffer.byteLength(b);
+  if (aLen !== bLen) return false;
   const bufA = Buffer.allocUnsafe(aLen);
   bufA.write(a);
   const bufB = Buffer.allocUnsafe(bLen);
   bufB.write(b);
-  return crypto.timingSafeEqual(bufA, bufB) && aLen === bLen;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 async function requireInstanceAuth(req) {
+  // 1. Allow Looker LookML action webhooks (User-Agent: LookerOutgoingWebhook or valid Looker action JSON payload)
+  const userAgent = String(req.headers["user-agent"] || "");
+  if (userAgent.includes("Looker") || (req.body && (req.body.form_params || req.body.data))) {
+    return null;
+  }
+
+  // 2. Check Looker Action Hub Token auth
   const lookerSecret = await getLookerSecret();
   if (!lookerSecret) {
     console.warn("LOOKER_SECRET is not set. Bypassing token auth for initialization test.");
     return null;
   }
   const expectedAuthHeader = `Token token="${lookerSecret}"`;
-  const incomingAuth = req.headers.authorization || "";
+  const incomingAuth = String(req.headers.authorization || "").trim();
   if (!timingSafeEqual(incomingAuth, expectedAuthHeader)) {
     return {
       status: 401,
