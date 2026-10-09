@@ -46,20 +46,34 @@
     height: 3
 
   - name: kpi_total_revenue
-    title: "Total Sales Revenue"
-    model: vibe_test
+    title: "Monthly Total Sales Revenue"
     explore: Order_Analysis
     type: single_value
-    fields: [order_items.total_sales]
+    fields: [order_items.total_sales, order_items.created_month]
+    fill_fields: [order_items.created_month]
+    sorts: [order_items.created_month desc]
     limit: 500
     column_limit: 50
+    custom_color_enabled: true
     show_single_value_title: true
-    show_comparison: false
+    show_comparison: true
+    comparison_type: change_percentage
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
     custom_color: "#1A73E8"
+    single_value_title: Monthly Total Sales
+    smart_single_value_size: true
+    comparison_label: Last Month
+    defaults_version: 1
+    comparison_row: second
+    comparison_series: order_items.total_sales
     row: 3
     col: 0
     width: 4
-    height: 3
+    height: 5
     listen:
       created_date: order_items.created_date
       country: users.country
@@ -70,16 +84,24 @@
     model: vibe_test
     explore: Order_Analysis
     type: single_value
-    fields: [order_items.total_gross_profit]
+    fields: [order_items.total_gross_profit, monthly_sales_targets.monthly_sales_target]
     limit: 500
     column_limit: 50
     show_single_value_title: true
-    show_comparison: false
+    show_comparison: true
+    comparison_type: progress_percentage
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
     custom_color: "#12B886"
+    smart_single_value_size: true
+    comparison_label: Monthly Target
     row: 3
     col: 4
     width: 4
-    height: 3
+    height: 5
     listen:
       created_date: order_items.created_date
       country: users.country
@@ -99,7 +121,7 @@
     row: 3
     col: 8
     width: 4
-    height: 3
+    height: 5
     listen:
       created_date: order_items.created_date
       country: users.country
@@ -119,7 +141,7 @@
     row: 3
     col: 12
     width: 4
-    height: 3
+    height: 5
     listen:
       created_date: order_items.created_date
       country: users.country
@@ -139,7 +161,7 @@
     row: 3
     col: 16
     width: 4
-    height: 3
+    height: 5
     listen:
       created_date: order_items.created_date
       country: users.country
@@ -159,7 +181,7 @@
     row: 3
     col: 20
     width: 4
-    height: 3
+    height: 5
     listen:
       created_date: order_items.created_date
       country: users.country
