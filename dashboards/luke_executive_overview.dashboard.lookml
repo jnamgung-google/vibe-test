@@ -4,12 +4,11 @@
   preferred_viewer: dashboards-next
   description: "A highly actionable executive summary combining top-line YoY indicators, target tracking, and strategic operational trends."
   
-  # Dashboard-level filters
   filters:
     - name: Date Range
       title: Date Range
       type: date_filter
-      default_value: "This Year to Date"
+      default_value: "12 months ago for 12 months" # safer than year-to-date for YoY comparison
       allow_multiple_values: true
       required: false
       ui_config:
@@ -31,19 +30,17 @@
 
   elements:
     # -----------------------------------------------------------
-    # ROW 1: LUKE'S REQUIREMENT (6 INDICATORS COMPARING YOY, MAPPED LOCALLY)
+    # ROW 1: 6 INDICATORS WITH TARGET/COMPARISON (FIXED DIMENSIONS)
     # -----------------------------------------------------------
     - name: "Total Revenue (YoY)"
-      title: "Total Sales"
+      title: "Total Sales (YoY)"
       type: single_value
       model: vibe_test
       explore: Order_Analysis
+      dimensions: [order_items.created_year]
       measures: [order_items.total_sales]
-      dynamic_fields: 
-        - table_calculation: prior_year_sales
-          label: "Prior Year"
-          expression: "offset(${order_items.total_sales}, 1)"
-          value_format: "$#,##0.00"
+      sorts: [order_items.created_year desc]
+      limit: 2
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false 
@@ -54,15 +51,14 @@
       height: 4
 
     - name: "Active Users (YoY)"
-      title: "Total Users"
+      title: "Total Users (YoY)"
       type: single_value
       model: vibe_test
       explore: Order_Analysis
+      dimensions: [users.created_year]
       measures: [users.count]
-      dynamic_fields:
-        - table_calculation: prior_year_users
-          label: "Prior Year"
-          expression: "offset(${users.count}, 1)"
+      sorts: [users.created_year desc]
+      limit: 2
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false
@@ -77,11 +73,10 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
+      dimensions: [order_items.created_year]
       measures: [order_items.gross_profit_margin]
-      dynamic_fields:
-        - table_calculation: prior_year_margin
-          label: "Prior Year"
-          expression: "offset(${order_items.gross_profit_margin}, 1)"
+      sorts: [order_items.created_year desc]
+      limit: 2
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false
@@ -96,14 +91,13 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
+      dimensions: [order_items.created_year]
       measures: [marketing_spend.blended_cac]
-      dynamic_fields:
-        - table_calculation: prior_year_cac
-          label: "Prior Year"
-          expression: "offset(${marketing_spend.blended_cac}, 1)"
+      sorts: [order_items.created_year desc]
+      limit: 2
       show_comparison: true
       comparison_type: change
-      comparison_reverse_colors: true # Lower CAC is better
+      comparison_reverse_colors: true
       listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 12
@@ -115,14 +109,13 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
+      dimensions: [order_items.created_year]
       measures: [order_items.order_return_rate]
-      dynamic_fields:
-        - table_calculation: prior_year_returns
-          label: "Prior Year"
-          expression: "offset(${order_items.order_return_rate}, 1)"
+      sorts: [order_items.created_year desc]
+      limit: 2
       show_comparison: true
       comparison_type: change
-      comparison_reverse_colors: true # Lower return rate is better
+      comparison_reverse_colors: true
       listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 16
@@ -134,11 +127,10 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
+      dimensions: [order_items.created_year]
       measures: [users.average_lifetime_revenue]
-      dynamic_fields:
-        - table_calculation: prior_year_ltv
-          label: "Prior Year"
-          expression: "offset(${users.average_lifetime_revenue}, 1)"
+      sorts: [order_items.created_year desc]
+      limit: 2
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false
@@ -149,14 +141,16 @@
       height: 4
 
     # -----------------------------------------------------------
-    # ROW 2: LUKE'S REQUIREMENT - GAUGE/TARGET CHARTS
+    # ROW 2: TARGET PACING (FIXED - NO PLUGINS REQUIRED)
     # -----------------------------------------------------------
     - name: "Sales vs Target"
-      title: "Sales vs Monthly Target"
-      type: looker_gauge 
+      title: "Sales (Progress vs Target)"
+      type: single_value 
       model: vibe_test
       explore: Order_Analysis
       measures: [order_items.total_sales, monthly_sales_targets.monthly_sales_target]
+      show_comparison: true
+      comparison_type: progress_percentage
       listen: {Date Range: order_items.created_date, Country: users.country}
       row: 4
       col: 0
@@ -165,7 +159,7 @@
 
     - name: "Repeat Customer Rate"
       title: "Repeat Customer Rate (%)"
-      type: looker_gauge 
+      type: single_value 
       model: vibe_test
       explore: Order_Analysis
       measures: [users.repeat_customer_rate]
@@ -177,7 +171,7 @@
 
     - name: "Average Basket Size"
       title: "Avg Basket Size"
-      type: looker_gauge 
+      type: single_value 
       model: vibe_test
       explore: Order_Analysis
       measures: [order_items.average_basket_size]
