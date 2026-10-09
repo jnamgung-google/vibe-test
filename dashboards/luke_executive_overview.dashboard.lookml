@@ -16,57 +16,57 @@
         type: advanced
         display: popover
     
-    - name: Region
-      title: Region
+    - name: Country
+      title: Country
       type: field_filter
-      default_value: "North America, EMEA"
+      default_value: ""
       allow_multiple_values: true
       required: false
-      model: your_model_name
-      explore: order_items
-      field: users.region
+      model: vibe_test
+      explore: Order_Analysis
+      field: users.country
       ui_config:
-        type: button_group
-        display: inline
+        type: tag_list
+        display: popover
 
   elements:
     # -----------------------------------------------------------
-    # ROW 1: LUKE'S REQUIREMENT - 6 INDICATORS WITH YOY COMPARISON
+    # ROW 1: LUKE'S REQUIREMENT (6 INDICATORS COMPARING YOY, MAPPED LOCALLY)
     # -----------------------------------------------------------
     - name: "Total Revenue (YoY)"
-      title: "Total Revenue"
+      title: "Total Sales"
       type: single_value
-      model: your_model_name
-      explore: order_items
-      measures: [order_items.total_revenue]
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [order_items.total_sales]
       dynamic_fields: 
-        - table_calculation: prior_year_revenue
+        - table_calculation: prior_year_sales
           label: "Prior Year"
-          expression: "offset(${order_items.total_revenue}, 1)"
+          expression: "offset(${order_items.total_sales}, 1)"
           value_format: "$#,##0.00"
       show_comparison: true
       comparison_type: change
-      comparison_reverse_colors: false # Higher is better
-      listen: {Date Range: order_items.created_date, Region: users.region}
+      comparison_reverse_colors: false 
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 0
       width: 4
       height: 4
 
     - name: "Active Users (YoY)"
-      title: "Active Users"
+      title: "Total Users"
       type: single_value
-      model: your_model_name
-      explore: events
-      measures: [events.unique_users]
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [users.count]
       dynamic_fields:
         - table_calculation: prior_year_users
           label: "Prior Year"
-          expression: "offset(${events.unique_users}, 1)"
+          expression: "offset(${users.count}, 1)"
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false
-      listen: {Date Range: events.created_date, Region: users.region}
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 4
       width: 4
@@ -75,74 +75,74 @@
     - name: "Gross Margin (YoY)"
       title: "Gross Margin %"
       type: single_value
-      model: your_model_name
-      explore: order_items
-      measures: [order_items.gross_margin_percent]
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [order_items.gross_profit_margin]
       dynamic_fields:
         - table_calculation: prior_year_margin
           label: "Prior Year"
-          expression: "offset(${order_items.gross_margin_percent}, 1)"
+          expression: "offset(${order_items.gross_profit_margin}, 1)"
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false
-      listen: {Date Range: order_items.created_date, Region: users.region}
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 8
       width: 4
       height: 4
 
     - name: "CAC (YoY)"
-      title: "Customer Acq. Cost"
+      title: "Blended CAC"
       type: single_value
-      model: your_model_name
-      explore: marketing_spend
-      measures: [marketing.average_cac]
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [marketing_spend.blended_cac]
       dynamic_fields:
         - table_calculation: prior_year_cac
           label: "Prior Year"
-          expression: "offset(${marketing.average_cac}, 1)"
+          expression: "offset(${marketing_spend.blended_cac}, 1)"
       show_comparison: true
       comparison_type: change
-      comparison_reverse_colors: true # Lower CAC is better! Red if YoY grows.
-      listen: {Date Range: marketing.spend_date, Region: users.region}
+      comparison_reverse_colors: true # Lower CAC is better
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 12
       width: 4
       height: 4
 
-    - name: "Churn Rate (YoY)"
-      title: "Churn Rate %"
+    - name: "Return Rate (YoY)"
+      title: "Order Return Rate"
       type: single_value
-      model: your_model_name
-      explore: subscriptions
-      measures: [subscriptions.churn_rate]
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [order_items.order_return_rate]
       dynamic_fields:
-        - table_calculation: prior_year_churn
+        - table_calculation: prior_year_returns
           label: "Prior Year"
-          expression: "offset(${subscriptions.churn_rate}, 1)"
+          expression: "offset(${order_items.order_return_rate}, 1)"
       show_comparison: true
       comparison_type: change
-      comparison_reverse_colors: true # Lower churn is better!
-      listen: {Date Range: subscriptions.created_date, Region: users.region}
+      comparison_reverse_colors: true # Lower return rate is better
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 16
       width: 4
       height: 4
 
-    - name: "CLV (YoY)"
-      title: "Cust. Lifetime Value"
+    - name: "LTV (YoY)"
+      title: "Avg Lifetime Revenue"
       type: single_value
-      model: your_model_name
-      explore: order_items
-      measures: [users.average_lifetime_value]
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [users.average_lifetime_revenue]
       dynamic_fields:
-        - table_calculation: prior_year_clv
+        - table_calculation: prior_year_ltv
           label: "Prior Year"
-          expression: "offset(${users.average_lifetime_value}, 1)"
+          expression: "offset(${users.average_lifetime_revenue}, 1)"
       show_comparison: true
       comparison_type: change
       comparison_reverse_colors: false
-      listen: {Date Range: order_items.created_date, Region: users.region}
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 0
       col: 20
       width: 4
@@ -151,85 +151,82 @@
     # -----------------------------------------------------------
     # ROW 2: LUKE'S REQUIREMENT - GAUGE/TARGET CHARTS
     # -----------------------------------------------------------
-    - name: "Q3 Revenue vs Target"
-      title: "Revenue Pacing (vs Target)"
-      type: looker_gauge # Can be swapped to `looker_bullet` if gauge is not enabled
-      model: your_model_name
-      explore: order_items
-      measures: [order_items.total_revenue, order_items.target_revenue]
-      listen: {Date Range: order_items.created_date, Region: users.region}
+    - name: "Sales vs Target"
+      title: "Sales vs Monthly Target"
+      type: looker_gauge 
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [order_items.total_sales, monthly_sales_targets.monthly_sales_target]
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 4
       col: 0
       width: 8
       height: 6
 
-    - name: "New Customers vs Target"
-      title: "New Logo Pacing (vs Target)"
+    - name: "Repeat Customer Rate"
+      title: "Repeat Customer Rate (%)"
       type: looker_gauge 
-      model: your_model_name
-      explore: events
-      measures: [events.new_users, events.target_new_users]
-      listen: {Date Range: events.created_date, Region: users.region}
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [users.repeat_customer_rate]
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 4
       col: 8
       width: 8
       height: 6
 
-    - name: "Support CSAT vs Target"
-      title: "CSAT Score (%)"
+    - name: "Average Basket Size"
+      title: "Avg Basket Size"
       type: looker_gauge 
-      model: your_model_name
-      explore: zendesk
-      measures: [zendesk.average_csat, zendesk.csat_target]
-      listen: {Date Range: zendesk.created_date, Region: users.region}
+      model: vibe_test
+      explore: Order_Analysis
+      measures: [order_items.average_basket_size]
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 4
       col: 16
       width: 8
       height: 6
 
     # -----------------------------------------------------------
-    # ROW 3: DETAILED ACTIONABLE TRENDS & TABLES (Overview additions)
+    # ROW 3: DETAILED ACTIONABLE TRENDS & TABLES
     # -----------------------------------------------------------
-    - name: "Revenue Trend vs Target"
-      title: "Revenue by Month vs. Target"
+    - name: "Sales Trend vs Target"
+      title: "Sales by Month vs. Target"
       type: looker_column
-      model: your_model_name
-      explore: order_items
+      model: vibe_test
+      explore: Order_Analysis
       dimensions: [order_items.created_month]
-      measures: [order_items.total_revenue, order_items.target_revenue]
-      y_axes: [{label: "Revenue ($)", orientation: left, series: [{axisId: order_items.total_revenue, id: order_items.total_revenue, name: Total Revenue}], showLabels: true, showValues: true}]
+      measures: [order_items.total_sales, monthly_sales_targets.monthly_sales_target]
+      y_axes: [{label: "Sales ($)", orientation: left, series: [{axisId: order_items.total_sales, id: order_items.total_sales, name: Total Sales}], showLabels: true, showValues: true}]
       series_types:
-        order_items.target_revenue: line # Overlay line chart on top of column chart
+        monthly_sales_targets.monthly_sales_target: line 
       colors: ["#1A73E8", "#E8710A"] 
       show_values: false
       x_axis_gridlines: false
       y_axis_gridlines: true
-      listen: {Date Range: order_items.created_date, Region: users.region}
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 10
       col: 0
       width: 14
       height: 7
 
-    - name: "Top Performing Campaigns"
-      title: "Top Campaigns (Actionable Detail)"
+    - name: "Top Performing Sources"
+      title: "Top Traffic Sources (Actionable Detail)"
       type: looker_grid
-      model: your_model_name
-      explore: marketing_spend
-      dimensions: [marketing.campaign_name, marketing.channel]
-      measures: [marketing.total_spend, marketing.conversions, marketing.cpa]
-      sorts: [marketing.conversions desc]
+      model: vibe_test
+      explore: Order_Analysis
+      dimensions: [users.traffic_source]
+      measures: [marketing_spend.total_marketing_spend, order_items.total_sales, marketing_spend.blended_cac]
+      sorts: [order_items.total_sales desc]
       limit: 10
       show_view_names: false
       show_row_numbers: true
       conditional_formatting:
         - type: greater_than
-          value: 50.00 # Highlight CPAs over $50 as red
+          value: 50.00 
           background_color: "#FAD2CF"
           font_color: "#A50E0E"
-          color_application:
-            collection_id: default
-            palette_id: default
-      listen: {Date Range: marketing.spend_date, Region: users.region}
+      listen: {Date Range: order_items.created_date, Country: users.country}
       row: 10
       col: 14
       width: 10
