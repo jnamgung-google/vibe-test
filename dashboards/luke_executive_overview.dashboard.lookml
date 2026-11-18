@@ -37,8 +37,7 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [order_items.created_year]
-      measures: [order_items.total_sales]
+      fields: [order_items.created_year, order_items.total_sales]
       sorts: [order_items.created_year desc]
       limit: 2
       show_comparison: true
@@ -55,8 +54,7 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [users.created_year]
-      measures: [users.count]
+      fields: [users.created_year, users.count]
       sorts: [users.created_year desc]
       limit: 2
       show_comparison: true
@@ -73,8 +71,7 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [order_items.created_year]
-      measures: [order_items.gross_profit_margin]
+      fields: [order_items.created_year, order_items.gross_profit_margin]
       sorts: [order_items.created_year desc]
       limit: 2
       show_comparison: true
@@ -91,8 +88,7 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [order_items.created_year]
-      measures: [marketing_spend.blended_cac]
+      fields: [order_items.created_year, marketing_spend.blended_cac]
       sorts: [order_items.created_year desc]
       limit: 2
       show_comparison: true
@@ -109,8 +105,7 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [order_items.created_year]
-      measures: [order_items.order_return_rate]
+      fields: [order_items.created_year, order_items.order_return_rate]
       sorts: [order_items.created_year desc]
       limit: 2
       show_comparison: true
@@ -127,8 +122,7 @@
       type: single_value
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [order_items.created_year]
-      measures: [users.average_lifetime_revenue]
+      fields: [order_items.created_year, users.average_lifetime_revenue]
       sorts: [order_items.created_year desc]
       limit: 2
       show_comparison: true
@@ -148,7 +142,7 @@
       type: single_value 
       model: vibe_test
       explore: Order_Analysis
-      measures: [order_items.total_sales, monthly_sales_targets.monthly_sales_target]
+      fields: [order_items.total_sales, monthly_sales_targets.monthly_sales_target]
       show_comparison: true
       comparison_type: progress_percentage
       listen: {Date Range: order_items.created_date, Country: users.country}
@@ -162,7 +156,7 @@
       type: single_value 
       model: vibe_test
       explore: Order_Analysis
-      measures: [users.repeat_customer_rate]
+      fields: [users.repeat_customer_rate]
       listen: {Date Range: order_items.created_date, Country: users.country}
       row: 4
       col: 8
@@ -174,7 +168,7 @@
       type: single_value 
       model: vibe_test
       explore: Order_Analysis
-      measures: [order_items.average_basket_size]
+      fields: [order_items.average_basket_size]
       listen: {Date Range: order_items.created_date, Country: users.country}
       row: 4
       col: 16
@@ -189,8 +183,7 @@
       type: looker_column
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [order_items.created_month]
-      measures: [order_items.total_sales, monthly_sales_targets.monthly_sales_target]
+      fields: [order_items.created_month, order_items.total_sales, monthly_sales_targets.monthly_sales_target]
       y_axes: [{label: "Sales ($)", orientation: left, series: [{axisId: order_items.total_sales, id: order_items.total_sales, name: Total Sales}], showLabels: true, showValues: true}]
       series_types:
         monthly_sales_targets.monthly_sales_target: line 
@@ -209,8 +202,7 @@
       type: looker_grid
       model: vibe_test
       explore: Order_Analysis
-      dimensions: [users.traffic_source]
-      measures: [marketing_spend.total_marketing_spend, order_items.total_sales, marketing_spend.blended_cac]
+      fields: [users.traffic_source, marketing_spend.total_marketing_spend, order_items.total_sales, marketing_spend.blended_cac]
       sorts: [order_items.total_sales desc]
       limit: 10
       show_view_names: false

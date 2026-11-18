@@ -252,7 +252,7 @@
     show_x_axis_label: true
     show_x_axis_ticks: true
     series_types:
-      order_items.sales_lift_percent: looker_line
+      order_items.sales_lift_percent: line
     colors: ["#FD7E14", "#7950F2"]
     row: 8
     col: 12
@@ -317,7 +317,7 @@
     show_x_axis_label: true
     show_x_axis_ticks: true
     series_types:
-      order_items.simulated_gross_margin_percent: looker_scatter
+      order_items.simulated_gross_margin_percent: scatter
     colors: ["#E6FCF5", "#0CA678"]
     row: 15
     col: 12
@@ -380,7 +380,7 @@
     show_x_axis_label: true
     show_x_axis_ticks: true
     series_types:
-      order_items.sales_lift_percent: looker_line
+      order_items.sales_lift_percent: line
     colors: ["#FD7E14", "#7950F2"]
     row: 22
     col: 12

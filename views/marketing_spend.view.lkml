@@ -61,4 +61,28 @@ view: marketing_spend {
     sql: ${users.average_lifetime_revenue} / NULLIF(${blended_cac}, 0) ;;
     value_format_name: decimal_2
   }
+
+  measure: cac_per_growth_customer {
+    type: number
+    label: "CAC per High-Growth Customer"
+    description: "Marketing spend required to acquire one Champion or VIP Big-Ticket Customer"
+    sql: SAFE_DIVIDE(${total_marketing_spend}, NULLIF(${bqml_customer_segments.growth_segment_customer_count}, 0)) ;;
+    value_format_name: usd
+  }
+
+  measure: net_roas {
+    type: number
+    label: "Net Revenue ROAS (x)"
+    description: "Net Customer LTV divided by Total Marketing Spend"
+    sql: SAFE_DIVIDE(${bqml_customer_segments.total_segment_ltv}, NULLIF(${total_marketing_spend}, 0)) ;;
+    value_format: "0.00\"x\""
+  }
+
+  measure: gross_profit_roas {
+    type: number
+    label: "Gross Profit ROAS (x)"
+    description: "Total Gross Profit divided by Total Marketing Spend"
+    sql: SAFE_DIVIDE(${order_items.total_gross_profit}, NULLIF(${total_marketing_spend}, 0)) ;;
+    value_format: "0.00\"x\""
+  }
 }
